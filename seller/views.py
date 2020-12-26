@@ -2,7 +2,7 @@ from django.shortcuts import render
 # Create your views here.
 import json as JSON
 from django.shortcuts import render
-from rest_framework.response import Response 
+from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import permissions
 from django.shortcuts import render
@@ -10,7 +10,7 @@ from accounts.models import Item
 from accounts.models import Seller
 from django.core.serializers import json
 # import jwt,json
-#importinf models of tables 
+#importinf models of tables
 from accounts.models import Item
 from accounts.models import Seller
 from accounts.models import Buyer
@@ -19,7 +19,7 @@ from accounts.models import Order
 class getCategoryStore (APIView):
     permission_classes = (permissions.AllowAny,)
     def get(self, request, cat):
-        # data = self.request.data  
+        # data = self.request.data
         print(cat)
         obj = Seller.objects.filter(category = 'food')
         json_serializer = json.Serializer()
@@ -30,38 +30,47 @@ class getCategoryStore (APIView):
 class addItem(APIView):
     permission_classes = (permissions.AllowAny,)
     def post(self, request, format=None):
-        data = self.request.data 
+        data = self.request.data
         print(data)
-        productName = data['product'] 
-        description = data['description'] 
+        productName = data['product']
+        description = data['description']
         price = data['price']
         category = data['category']
-        image = data['url'] 
+        image = data['url']
+        store1 = data['user']
+        
         if category == "clothes":
-            gender = data['gender'] 
-            size = data['size'] 
+            gender = data['gender']
+            size = data['size']
             category_id = Category.objects.get(category_id =200)
-            item = Item.objects.create (productname = productName, description=description, price=price, gender=gender, size=size, image=image, category_id=200)
+            store = Seller.objects.get(store_id =store1)
+            s = store.store_id
+            item = Item.objects.create (productname = productName, store_id=s, description=description, price=price, gender=gender, size=size, image=image, category=category_id)
             return Response ({'success': 'Add Item'})
         if(category == 'food'):
-            types = data['type'] 
-            category_id = Category.objects.get(category_id =100) 
-            item = Item.objects.create (productname = productName, description=description, price=price,types=types, image=image, category_id=100)
+            types = data['type']
+            store = Seller.objects.get(store_id =store1)
+            s = store.store_id
+            category_id = Category.objects.get(category_id =100)
+            item = Item.objects.create (productname = productName,store_id=s, description=description, price=price,types=types, image=image, category_id=category_id)
             return Response ({'success': 'Add Item'})
         if category == 'accessories':
-            material = data['material'] 
-            print(material,"materiaaal")
+            material = data['material']
+            store = Seller.objects.get(store_id =store1)
+            s = store.store_id
             category_id = Category.objects.get(category_id =300)
-            item = Item.objects.create (productname = productName, description=description, price=price, image=image, material=material, category_id=300)
+            item = Item.objects.create (productname = productName,store_id=s, description=description, price=price, image=image, material=material, category=category_id)
             return Response ({'success': 'Add Item'})
-        if category == 'babyproducts':
+        if category == 'baby products':
             gender = data['gender']
+            store = Seller.objects.get(store_id =store1)
+            s = store.store_id
             category_id = Category.objects.get(category_id =400)
-            item = Item.objects.create (productname = productName, description=description, price=price, gender=gender, image=image, category_id=400)
+            item = Item.objects.create (productname = productName,store_id=s, description=description, price=price, gender=gender, image=image, category=category_id)
             return Response ({'success': 'Add Item'})
         # category_id = data['category_id']
-        # store_id = data['store_id'] 
-        item = Item.objects.create (productname = productName, description=description, price=price, gender=gender,types=types, size=size, image=image, material=material)
+        # store_id = data['store_id']
+        item = Item.objects.create (productname = productName,store_id=s, description=description, price=price, gender=gender,types=types, size=size, image=image, material=material)
         item.save()
         return Response ({'success': 'Add Item'})
 class getItems(APIView):
@@ -83,7 +92,7 @@ class getItemsVisit(APIView):
          print(json_serialized,"iteeeeeems" )
          return Response(json_serialized)
 class sellerVisit(APIView):
-    permission_classes = (permissions.AllowAny,)         
+    permission_classes = (permissions.AllowAny,)
     def get(self, request,pk, format=None):
         print(pk)
         obj1 = Seller.objects.filter(pk=pk)
@@ -100,7 +109,15 @@ class sellerVisit(APIView):
         myData.append(json_serialized)
         print("mydataaa",myData,"dataaend")
         # dat =   JSON.dumps(myData)
-        return Response(json_serialized1)         
+        return Response(json_serialized1)
+
+class deleteItem(APIView):
+    permission_classes = (permissions.AllowAny,)  
+    def delete(self, request, pk, format=None):
+        Item.objects.filter(pk=pk).delete()
+        print('Deleeeete')
+        return Response('Deleteeeed')
+
 class SnippetDetailSeller(APIView):
     """
     Retrieve, update or delete a snippet instance.
@@ -148,7 +165,6 @@ class SnippetDetailSeller(APIView):
     #     return Response(status=status.HTTP_204_NO_CONTENT)
         # item = Item.objects.create (productname = productName, description=description, price=price, gender=gender,types=types, size=size, image=image, material=material)
         # item.save()
-        
 class getListOrder (APIView):
      permission_classes = (permissions.AllowAny,)
      def get(self, request, pk):
@@ -157,21 +173,4 @@ class getListOrder (APIView):
          json_serializer = json.Serializer()
          json_serialized = json_serializer.serialize(obj)
          data= JSON.loads(json_serialized)
-         for x in data:
-            print(x['fields']['buyer'])
-            obj1 = Buyer.objects.get(buyer_id = x['fields']['buyer'])
-            print(obj1.username)
-            x['fields']['buyer'] = obj1.username
-         for x in data:
-            print(x['fields']['item'])
-            obj1 = Item.objects.get(item_id = x['fields']['item'])
-            print(obj1.productname)
-            
-            x['fields']['item'] = obj1.productname  
          return Response (data)
-        #  obj = Buyer.objects.get(phonenumber = phonenumber)
-        #  print(obj.buyer_id)
-         
-        #  return Response (data)
-
-
